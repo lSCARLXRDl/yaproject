@@ -1,6 +1,7 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QMenuBar, QToolBar
-from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QApplication, QWidget, QMenuBar, QToolBar, QComboBox, QLabel
+from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5 import QtWidgets
 
 
 class Example(QWidget):
@@ -18,8 +19,19 @@ class Example(QWidget):
         self.menubar.addMenu('Вид')
 
         self.toolbar = QToolBar(self)
-        self.toolbar.move(0, 40)
-        self.toolbar.addAction(QIcon('venv/clipboard.png'), 'sad')
+        self.toolbar.move(0, 30)
+        icons = QtWidgets.QFileIconProvider()
+
+        self.ag = QtWidgets.QActionGroup(self)
+        self.ag.addAction(self.toolbar.addAction(icons.icon(icons.File), 'myFile'))
+        self.ag.addAction(self.toolbar.addAction(icons.icon(icons.Folder), 'myFolder'))
+        self.toolbar.addSeparator()
+        self.ag.addAction(self.toolbar.addAction(icons.icon(icons.Trashcan), 'myTrash'))
+        self.ag.setExclusive(1)
+
+    def printAndSetCheck(action):
+        action.setCheckable(1)
+        action.setChecked(1)
 
 
 if __name__ == '__main__':
