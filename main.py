@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QMenuBar, QToolBar, QComboBox, QLabel
+from PyQt5.QtWidgets import QApplication, QWidget, QMenuBar, QToolBar, QComboBox, QLabel, QAction
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5 import QtWidgets
 
@@ -22,16 +22,22 @@ class Example(QWidget):
         self.toolbar.move(0, 30)
         icons = QtWidgets.QFileIconProvider()
 
-        self.ag = QtWidgets.QActionGroup(self)
-        self.ag.addAction(self.toolbar.addAction(icons.icon(icons.File), 'myFile'))
-        self.ag.addAction(self.toolbar.addAction(icons.icon(icons.Folder), 'myFolder'))
-        self.toolbar.addSeparator()
-        self.ag.addAction(self.toolbar.addAction(icons.icon(icons.Trashcan), 'myTrash'))
-        self.ag.setExclusive(1)
+        self.cb = QComboBox(self)
+        self.cb.setFixedSize(50, 30)
+        self.cb.addItems(['', '', ''])
+        self.cb.setItemIcon(0, QIcon('venv/rotate.ico'))
+        self.cb.setItemIcon(1, QIcon('venv/rotate_right.ico'))
+        self.cb.setItemIcon(2, QIcon('venv/rotate_left.ico'))
 
-    def printAndSetCheck(action):
-        action.setCheckable(1)
-        action.setChecked(1)
+        self.toolbar.addAction(QIcon('venv/paste.ico'), 'Paste')
+        self.toolbar.addAction(QIcon('venv/select.ico'), 'Select')
+        self.toolbar.addWidget(self.cb)
+        self.toolbar.addSeparator()
+        self.toolbar.addAction(QIcon('venv/pen.ico'), 'Pen')
+        self.toolbar.addAction(QIcon('venv/eraser.ico'), 'Eraser')
+        self.toolbar.addAction(QIcon('venv/fill.ico'), 'Fill')
+        self.toolbar.addAction(QIcon('venv/text.ico'), 'Text')
+        self.toolbar.addSeparator()
 
 
 if __name__ == '__main__':
