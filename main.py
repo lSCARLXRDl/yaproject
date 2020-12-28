@@ -29,15 +29,15 @@ class Example(QWidget):
         self.menubar.setStyleSheet("background-color: white;")
 
         self.toolbar = QToolBar(self)
-        self.toolbar.move(0, 25)
+        self.toolbar.move(0, 20)
 
         self.lb = QLabel(self)
-        self.lb.resize(330, 43)
-        self.lb.move(377, 25)
+        self.lb.resize(370, 37)
+        self.lb.move(330, 20)
         self.lb.setStyleSheet("background-color: white;")
 
         self.paint_lbl_height = 380
-        self.paint_lbl = Label(self)
+        self.paint_lbl = QLabel(self)
         self.paint_lbl.resize(650, self.paint_lbl_height)
         self.paint_lbl.move(20, 80)
         self.paint_lbl.setStyleSheet("background-color: white; border-style: solid;"
