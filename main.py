@@ -1,11 +1,12 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QMenuBar, QToolBar, QComboBox, QLabel, QAction, QSlider
+from PyQt5.QtWidgets import QApplication, QWidget, QMenuBar, QToolBar, QComboBox, QLabel, QSlider
 from PyQt5.QtWidgets import QColorDialog, QFileDialog, QInputDialog
-from PyQt5.QtGui import QIcon, QPixmap, QImage
-from PyQt5.QtCore import Qt, QRect
-from PyQt5.QtGui import QIcon, QPainter, QColor, QPainterPath
+from PyQt5.QtGui import QPixmap, QImage
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon, QPainter, QColor
 
 Color = '#000000'
+
 
 class Example(QWidget):
     def __init__(self):
@@ -32,8 +33,8 @@ class Example(QWidget):
         self.toolbar.move(0, 20)
 
         self.lb = QLabel(self)
-        self.lb.resize(370, 37)
-        self.lb.move(330, 20)
+        self.lb.resize(370, 43)
+        self.lb.move(377, 20)
         self.lb.setStyleSheet("background-color: white;")
 
         self.paint_lbl_height = 380
@@ -74,18 +75,18 @@ class Example(QWidget):
         self.cb = QComboBox(self)
         self.cb.setFixedSize(50, 30)
         self.cb.addItems(['', '', ''])
-        self.cb.setItemIcon(0, QIcon('venv/rotate.ico'))
-        self.cb.setItemIcon(1, QIcon('venv/rotate_right.ico'))
-        self.cb.setItemIcon(2, QIcon('venv/rotate_left.ico'))
+        self.cb.setItemIcon(0, QIcon('data/rotate.ico'))
+        self.cb.setItemIcon(1, QIcon('data/rotate_right.ico'))
+        self.cb.setItemIcon(2, QIcon('data/rotate_left.ico'))
 
-        self.toolbar.addAction(QIcon('venv/paste.ico'), 'Paste')
-        self.toolbar.addAction(QIcon('venv/select.ico'), 'Select')
+        self.toolbar.addAction(QIcon('data/paste.ico'), 'Paste')
+        self.toolbar.addAction(QIcon('data/select.ico'), 'Select')
         self.toolbar.addWidget(self.cb)
         self.toolbar.addSeparator()
-        self.toolbar.addAction(QIcon('venv/pen.ico'), 'Pen')
-        self.toolbar.addAction(QIcon('venv/eraser.ico'), 'Eraser')
-        self.toolbar.addAction(QIcon('venv/fill.ico'), 'Fill')
-        self.toolbar.addAction(QIcon('venv/text.ico'), 'Text')
+        self.toolbar.addAction(QIcon('data/pen.ico'), 'Pen')
+        self.toolbar.addAction(QIcon('data/eraser.ico'), 'Eraser')
+        self.toolbar.addAction(QIcon('data/fill.ico'), 'Fill')
+        self.toolbar.addAction(QIcon('data/text.ico'), 'Text')
         self.toolbar.addSeparator()
 
         self.lbl = QLabel()
@@ -93,7 +94,7 @@ class Example(QWidget):
         self.lbl.setStyleSheet("background-color: black; border-style: solid; border-width: 2px; border-color: black;")
         self.toolbar.addWidget(self.lbl)
 
-        a = self.toolbar.addAction(QIcon('venv/color.ico'), 'Select color')
+        a = self.toolbar.addAction(QIcon('data/color.ico'), 'Select color')
         a.triggered.connect(self.click1)
 
         self.toolbar.setStyleSheet("background-color: white;")
