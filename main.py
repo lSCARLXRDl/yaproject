@@ -8,7 +8,6 @@ from PyQt5.QtGui import QIcon, QPainter, QColor
 Color = '#000000'
 
 
-
 class Example(QWidget):
     def __init__(self):
         super().__init__()
