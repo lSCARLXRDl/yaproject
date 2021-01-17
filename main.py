@@ -1,11 +1,9 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QMenuBar, QToolBar, QComboBox, QLabel, QSlider
 from PyQt5.QtWidgets import QColorDialog, QFileDialog, QInputDialog
-from PyQt5.QtGui import QPixmap, QImage
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QPainter, QColor
-
-Color = '#000000'
+from PyQt5.QtGui import QPixmap, QIcon, QImage, QPainter, QPen, QBrush, QFont, QKeyEvent, QTransform, QClipboard
+from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtGui import QIcon, QPainter, QColor, QGuiApplication
 
 
 class Example(QWidget):
@@ -20,11 +18,27 @@ class Example(QWidget):
         self.can_resize = False
         self.can_save = False
 
+        self.background = Qt.white
+
+        self.image = QImage(self.size(), QImage.Format_RGB32)
+        self.image.fill(self.background)
+
+        self.drawing = False
+        self.brushSize = 2
+        self.brushColor = Qt.black
+        self.LastPoint = QPoint()
+        self.act = 1
+
+        self.mewo = QLabel(self)
+        self.mewo.resize(700, 70)
+        self.mewo.move(0, 0)
+        self.mewo.setStyleSheet("background-color: white;")
+
         self.menubar = QMenuBar(self)
         self.menu_file = self.menubar.addMenu('Файл')
         self.menu_file.addAction('Открыть').triggered.connect(self.open_file)
         self.menu_file.addAction('Создать новый').triggered.connect(self.create_new)
-        self.menu_file.addAction('Сохранить').triggered.connect(self.save_file)
+        self.menu_file.addAction('Сохранить').triggered.connect(self.save)
         self.menu_view = self.menubar.addAction('Тема')
         self.menu_view.triggered.connect(self.view_f)
         self.menubar.setStyleSheet("background-color: white;")
@@ -32,61 +46,40 @@ class Example(QWidget):
         self.toolbar = QToolBar(self)
         self.toolbar.move(0, 20)
 
-        self.lb = QLabel(self)
-        self.lb.resize(370, 43)
-        self.lb.move(377, 20)
-        self.lb.setStyleSheet("background-color: white;")
+        self.lb1 = QLabel(self)
+        self.lb1.resize(40, 440)
+        self.lb1.move(0, 70)
+        self.lb1.setStyleSheet("background-color: #c8d9cb;")
 
-        self.paint_lbl_height = 380
-        self.paint_lbl = QLabel(self)
-        self.paint_lbl.resize(650, self.paint_lbl_height)
-        self.paint_lbl.move(20, 80)
-        self.paint_lbl.setStyleSheet("background-color: white; border-style: solid;"
-                                     " border-width: 2px; border-color: black;")
+        self.lb2 = QLabel(self)
+        self.lb2.resize(700, 20)
+        self.lb2.move(0, 70)
+        self.lb2.setStyleSheet("background-color: #c8d9cb;")
 
-        self.sld = QSlider(Qt.Horizontal, self)
-        self.sld.setFocusPolicy(Qt.NoFocus)
-        self.sld.resize(300, 20)
-        self.sld.move(370, 470)
-        self.sld.setStyleSheet("""
-                    QSlider{
-                        background: #c8d9cb;
-                    }
-                    QSlider::groove:horizontal {  
-                        height: 10px;
-                        margin: 0px;
-                        border-radius: 5px;
-                        background: #B0AEB1;
-                    }
-                    QSlider::handle:horizontal {
-                        background: #fff;
-                        border: 1px solid #E3DEE2;
-                        width: 17px;
-                        margin: -5px 0; 
-                        border-radius: 8px;
-                    }
-                    QSlider::sub-page:qlineargradient {
-                        background: #3B99FC;
-                        border-radius: 5px;
-                    }
-                """)
-        self.sld.valueChanged[int].connect(self.changeValue)
+        self.lb3 = QLabel(self)
+        self.lb3.resize(40, 440)
+        self.lb3.move(660, 70)
+        self.lb3.setStyleSheet("background-color: #c8d9cb;")
 
-        self.cb = QComboBox(self)
-        self.cb.setFixedSize(50, 30)
-        self.cb.addItems(['', '', ''])
-        self.cb.setItemIcon(0, QIcon('data/rotate.ico'))
-        self.cb.setItemIcon(1, QIcon('data/rotate_right.ico'))
-        self.cb.setItemIcon(2, QIcon('data/rotate_left.ico'))
+        self.lb4 = QLabel(self)
+        self.lb4.resize(700, 20)
+        self.lb4.move(0, 480)
+        self.lb4.setStyleSheet("background-color: #c8d9cb;")
 
-        self.toolbar.addAction(QIcon('data/paste.ico'), 'Paste')
-        self.toolbar.addAction(QIcon('data/select.ico'), 'Select')
-        self.toolbar.addWidget(self.cb)
+        paste = self.toolbar.addAction(QIcon('data/paste.ico'), 'Paste')
+        paste.triggered.connect(self.paste)
+        rot1 = self.toolbar.addAction(QIcon('data/rotate_right.ico'), 'Rotate')
+        rot1.triggered.connect(self.rotate1)
+        rot2 = self.toolbar.addAction(QIcon('data/rotate_left.ico'), 'Rotate')
+        rot2.triggered.connect(self.rotate2)
         self.toolbar.addSeparator()
-        self.toolbar.addAction(QIcon('data/pen.ico'), 'Pen')
-        self.toolbar.addAction(QIcon('data/eraser.ico'), 'Eraser')
+        pen = self.toolbar.addAction(QIcon('data/pen.ico'), 'Pen')
+        pen.triggered.connect(self.click_act1)
+        eraser = self.toolbar.addAction(QIcon('data/eraser.ico'), 'Eraser')
+        eraser.triggered.connect(self.click_act2)
         self.toolbar.addAction(QIcon('data/fill.ico'), 'Fill')
-        self.toolbar.addAction(QIcon('data/text.ico'), 'Text')
+        text = self.toolbar.addAction(QIcon('data/text.ico'), 'Text')
+        text.triggered.connect(self.click_act3)
         self.toolbar.addSeparator()
 
         self.lbl = QLabel()
@@ -99,111 +92,88 @@ class Example(QWidget):
 
         self.toolbar.setStyleSheet("background-color: white;")
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton and 660 > event.x() > 40 and 480 > event.y() > 90:
+            self.drawing = True
+            self.lastPoint = event.pos()
+
+    def mouseMoveEvent(self, event):
+        if self.drawing and 660 > event.x() > 40 and 480 > event.y() > 90:
+            if self.act == 1:
+                painter = QPainter(self.image)
+                painter.setPen(QPen(self.brushColor, self.brushSize, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.drawLine(self.lastPoint, event.pos())
+                self.lastPoint = event.pos()
+                self.update()
+            elif self.act == 2:
+                painter = QPainter(self.image)
+                painter.setPen(QPen(Qt.white, 15, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+                painter.drawLine(self.lastPoint, event.pos())
+                self.lastPoint = event.pos()
+                self.update()
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.drawing = False
+
+    def paintEvent(self, event):
+        canvasPainter = QPainter(self)
+        canvasPainter.drawImage(self.rect(), self.image, self.image.rect())
+
+    def click_act1(self):
+        self.act = 1
+
+    def click_act2(self):
+        self.act = 2
+
+    def click_act3(self):
+        self.act = 3
+
+    def paste(self):
+        clipboard = QGuiApplication.clipboard()
+        mimeData = clipboard.mimeData()
+        self.image = mimeData.imageData()
+        self.update()
+
+    def rotate1(self):
+        my_transform = QTransform()
+        my_transform.rotate(90)
+        self.image = self.image.transformed(my_transform)
+        self.update()
+
+    def rotate2(self):
+        my_transform = QTransform()
+        my_transform.rotate(-90)
+        self.image = self.image.transformed(my_transform)
+        self.update()
+
     def click1(self):
-        global Color
         color = QColorDialog.getColor()
         if color.isValid():
             self.lbl.setStyleSheet(
                 f"background-color: {color.name()}; border-style: solid; border-width: 2px; border-color: black;")
-            Color = color.name()
+            self.brushColor = color.toRgb()
+
+    def save(self):
+        filePath, _ = QFileDialog.getSaveFileName(self, "Save Image", "",
+                                                  "PNG(*.png);;JPEG(*.jpg *.jpeg);;All Files(*.*) ")
+
+        if filePath == "":
+            return
+        self.image.save(filePath)
 
     def open_file(self):
         fname = QFileDialog.getOpenFileName(self, 'Выбрать картинку', '')[0]
-        self.pixmap = QPixmap(fname)
-        self.pixmap = self.pixmap.scaledToHeight(self.paint_lbl_height)
-        self.paint_lbl.resize(self.pixmap.width(), self.paint_lbl_height)
-        self.paint_lbl.setPixmap(self.pixmap)
-        self.can_resize = True
-        self.can_save = True
-
-    def changeValue(self, value):
-        if value > 0 and value < 10:
-            if self.can_resize:
-                self.paint_lbl_height = 200
-                self.pixmap = self.pixmap.scaledToHeight(self.paint_lbl_height)
-                self.paint_lbl.resize(self.pixmap.width(), self.paint_lbl_height)
-                self.paint_lbl.setPixmap(self.pixmap)
-            else:
-                self.paint_lbl.resize(344, 200)
-        if value > 10 and value < 20:
-            if self.can_resize:
-                self.paint_lbl_height = 220
-                self.pixmap = self.pixmap.scaledToHeight(self.paint_lbl_height)
-                self.paint_lbl.resize(self.pixmap.width(), self.paint_lbl_height)
-                self.paint_lbl.setPixmap(self.pixmap)
-            else:
-                self.paint_lbl.resize(379, 220)
-        elif value > 20 and value < 30:
-            if self.can_resize:
-                self.paint_lbl_height = 240
-                self.pixmap = self.pixmap.scaledToHeight(self.paint_lbl_height)
-                self.paint_lbl.resize(self.pixmap.width(), self.paint_lbl_height)
-                self.paint_lbl.setPixmap(self.pixmap)
-            else:
-                self.paint_lbl.resize(413, 240)
-        elif value > 30 and value < 40:
-            if self.can_resize:
-                self.paint_lbl_height = 260
-                self.pixmap = self.pixmap.scaledToHeight(self.paint_lbl_height)
-                self.paint_lbl.resize(self.pixmap.width(), self.paint_lbl_height)
-                self.paint_lbl.setPixmap(self.pixmap)
-            else:
-                self.paint_lbl.resize(448, 260)
-        elif value > 40 and value < 50:
-            if self.can_resize:
-                self.paint_lbl_height = 280
-                self.pixmap = self.pixmap.scaledToHeight(self.paint_lbl_height)
-                self.paint_lbl.resize(self.pixmap.width(), self.paint_lbl_height)
-                self.paint_lbl.setPixmap(self.pixmap)
-            else:
-                self.paint_lbl.resize(482, 280)
-        elif value > 50 and value < 60:
-            if self.can_resize:
-                self.paint_lbl_height = 300
-                self.pixmap = self.pixmap.scaledToHeight(self.paint_lbl_height)
-                self.paint_lbl.resize(self.pixmap.width(), self.paint_lbl_height)
-                self.paint_lbl.setPixmap(self.pixmap)
-            else:
-                self.paint_lbl.resize(517, 300)
-        elif value > 60 and value < 70:
-            if self.can_resize:
-                self.paint_lbl_height = 320
-                self.pixmap = self.pixmap.scaledToHeight(self.paint_lbl_height)
-                self.paint_lbl.resize(self.pixmap.width(), self.paint_lbl_height)
-                self.paint_lbl.setPixmap(self.pixmap)
-            else:
-                self.paint_lbl.resize(551, 320)
-        elif value > 70 and value < 80:
-            if self.can_resize:
-                self.paint_lbl_height = 340
-                self.pixmap = self.pixmap.scaledToHeight(self.paint_lbl_height)
-                self.paint_lbl.resize(self.pixmap.width(), self.paint_lbl_height)
-                self.paint_lbl.setPixmap(self.pixmap)
-            else:
-                self.paint_lbl.resize(586, 340)
-        elif value > 80 and value < 90:
-            if self.can_resize:
-                self.paint_lbl_height = 360
-                self.pixmap = self.pixmap.scaledToHeight(self.paint_lbl_height)
-                self.paint_lbl.resize(self.pixmap.width(), self.paint_lbl_height)
-                self.paint_lbl.setPixmap(self.pixmap)
-            else:
-                self.paint_lbl.resize(620, 360)
-        elif value > 90 and value < 100:
-            if self.can_resize:
-                self.paint_lbl_height = 380
-                self.pixmap = self.pixmap.scaledToHeight(self.paint_lbl_height)
-                self.paint_lbl.resize(self.pixmap.width(), self.paint_lbl_height)
-                self.paint_lbl.setPixmap(self.pixmap)
-            else:
-                self.paint_lbl.resize(650, 380)
+        self.image.load(fname)
 
     def create_new(self):
-        self.paint_lbl_height = 380
-        self.paint_lbl.resize(650, self.paint_lbl_height)
-        self.paint_lbl.clear()
-        self.can_resize = False
-        self.color = '#000000'
+        self.act = 1
+        self.brushColor = Qt.black
+        self.lbl.setStyleSheet(
+            f"background-color: black; border-style: solid; border-width: 2px; border-color: black;")
+        self.image = QImage(self.size(), QImage.Format_RGB32)
+        self.image.fill(self.background)
+        self.update()
 
     def save_file(self):
         if self.can_save:
@@ -218,165 +188,22 @@ class Example(QWidget):
             ("Классический", "Красный", "Жёлтый"), 0, False)
         if color == "Классический":
             self.setStyleSheet("background-color: #c8d9cb;")
-            self.menubar.setStyleSheet(
-                """
-                QMenuBar
-                {
-                    background-color: #c8d9cb;
-                    color: black;
-                }
-                QMenuBar::item
-                {
-                    background-color: white;
-                    color: black;
-                }
-                QMenuBar::item::selected
-                {
-                    background-color: #def9ff;
-                    color: black;
-                }
-                 """)
-            self.paint_lbl.setStyleSheet("background-color: white; border-style: solid;"
-                                         " border-width: 2px; border-color: black;")
-            self.sld.setStyleSheet("""
-                                QSlider{
-                                    background: #c8d9cb;
-                                }
-                                QSlider::groove:horizontal {  
-                                    height: 10px;
-                                    margin: 0px;
-                                    border-radius: 5px;
-                                    background: #B0AEB1;
-                                }
-                                QSlider::handle:horizontal {
-                                    background: #fff;
-                                    border: 1px solid #E3DEE2;
-                                    width: 17px;
-                                    margin: -5px 0; 
-                                    border-radius: 8px;
-                                }
-                                QSlider::sub-page:qlineargradient {
-                                    background: #3B99FC;
-                                    border-radius: 5px;
-                                }
-                            """)
+            self.lb1.setStyleSheet("background-color: #c8d9cb;")
+            self.lb2.setStyleSheet("background-color: #c8d9cb;")
+            self.lb3.setStyleSheet("background-color: #c8d9cb;")
+            self.lb4.setStyleSheet("background-color: #c8d9cb;")
         elif color == "Красный":
             self.setStyleSheet("background-color: red;")
-            self.menubar.setStyleSheet(
-                """
-                QMenuBar
-                {
-                    background-color: red;
-                    color: black;
-                }
-                QMenuBar::item
-                {
-                    background-color: white;
-                    color: black;
-                }
-                QMenuBar::item::selected
-                {
-                    background-color: #def9ff;
-                    color: black;
-                }
-                 """)
-            self.paint_lbl.setStyleSheet("background-color: white; border-style: solid;"
-                                         " border-width: 2px; border-color: black;")
-            self.sld.setStyleSheet("""
-                                QSlider{
-                                    background: red;
-                                }
-                                QSlider::groove:horizontal {  
-                                    height: 10px;
-                                    margin: 0px;
-                                    border-radius: 5px;
-                                    background: #B0AEB1;
-                                }
-                                QSlider::handle:horizontal {
-                                    background: #fff;
-                                    border: 1px solid #E3DEE2;
-                                    width: 17px;
-                                    margin: -5px 0; 
-                                    border-radius: 8px;
-                                }
-                                QSlider::sub-page:qlineargradient {
-                                    background: #3B99FC;
-                                    border-radius: 5px;
-                                }
-                            """)
+            self.lb1.setStyleSheet("background-color: red;")
+            self.lb2.setStyleSheet("background-color: red;")
+            self.lb3.setStyleSheet("background-color: red;")
+            self.lb4.setStyleSheet("background-color: red;")
         elif color == "Жёлтый":
             self.setStyleSheet("background-color: #f6ff42;")
-            self.menubar.setStyleSheet(
-                """
-                QMenuBar
-                {
-                    background-color: #f6ff42;
-                    color: black;
-                }
-                QMenuBar::item
-                {
-                    background-color: white;
-                    color: black;
-                }
-                QMenuBar::item::selected
-                {
-                    background-color: #def9ff;
-                    color: black;
-                }
-                 """)
-            self.paint_lbl.setStyleSheet("background-color: white; border-style: solid;"
-                                         " border-width: 2px; border-color: black;")
-            self.sld.setStyleSheet("""
-                                QSlider{
-                                    background: #f6ff42;
-                                }
-                                QSlider::groove:horizontal {  
-                                    height: 10px;
-                                    margin: 0px;
-                                    border-radius: 5px;
-                                    background: #B0AEB1;
-                                }
-                                QSlider::handle:horizontal {
-                                    background: #fff;
-                                    border: 1px solid #E3DEE2;
-                                    width: 17px;
-                                    margin: -5px 0; 
-                                    border-radius: 8px;
-                                }
-                                QSlider::sub-page:qlineargradient {
-                                    background: #3B99FC;
-                                    border-radius: 5px;
-                                }
-                            """)
-
-
-class Label(QLabel):
-    def __init__(self, parent=None):
-        super(Label, self).__init__(parent=parent)
-        self.flag = False
-        self._im = QImage(self.width(), self.height(), QImage.Format_ARGB32)
-        self._im.fill(QColor("white"))
-
-    def mousePressEvent(self, e):
-        if e.button() == Qt.LeftButton:
-            self.flag = True
-            self.xx = e.x()
-            self.yy = e.y()
-            self.update()
-
-    def paintEvent(self, event):
-        if self.flag:
-            qp = QPainter()
-            qp.begin(self)
-            qp.setBrush(QColor(Color))
-            qp.drawEllipse(self.xx - 15, self.yy - 15, 30, 30)
-            self.update()
-            qp.end()
-
-    def mouseMoveEvent(self, e):
-        if self.flag:
-            self.xx = e.x()
-            self.yy = e.y()
+            self.lb1.setStyleSheet("background-color: #f6ff42;")
+            self.lb2.setStyleSheet("background-color: #f6ff42;")
+            self.lb3.setStyleSheet("background-color: #f6ff42;")
+            self.lb4.setStyleSheet("background-color: #f6ff42;")
 
 
 if __name__ == '__main__':
