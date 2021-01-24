@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QMenuBar, QToolBar, QComboBox, QLabel, QSlider
 from PyQt5.QtWidgets import QColorDialog, QFileDialog, QInputDialog
 from PyQt5.QtGui import QPixmap, QIcon, QImage, QPainter, QPen, QBrush, QFont, QKeyEvent, QTransform, QClipboard
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt, QPoint, QRect
 from PyQt5.QtGui import QIcon, QPainter, QColor, QGuiApplication
 
 
@@ -17,6 +17,7 @@ class Example(QWidget):
         self.setStyleSheet("background-color: #c8d9cb;")
         self.can_resize = False
         self.can_save = False
+        self.printt = False
 
         self.background = Qt.white
 
@@ -92,8 +93,27 @@ class Example(QWidget):
 
         self.toolbar.setStyleSheet("background-color: white;")
 
+    def keyPressEvent(self, event):
+        if self.printt and event.key() != Qt.Key_Shift:
+            painter = QPainter(self.image)
+            painter.drawText(QRect(self.xn, self.yn, 13, 20), 0, event.text())
+            if event.text() in ['щ', 'ш', 'ю', 'ф', 'ы', 'ж', 'м', 'm', 'w']:
+                self.xn += 10
+            elif event.text() in ['i', 'j', 'l']:
+                self.xn += 4
+            else:
+                self.xn += 7
+            if event.text().isupper():
+                print(2)
+                self.xn += 2
+            self.update()
+
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton and 660 > event.x() > 40 and 480 > event.y() > 90:
+        if self.act == 3:
+            self.xn = event.x()
+            self.yn = event.y() - 5
+            self.printt = True
+        elif event.button() == Qt.LeftButton and 660 > event.x() > 40 and 480 > event.y() > 90:
             self.drawing = True
             self.lastPoint = event.pos()
 
