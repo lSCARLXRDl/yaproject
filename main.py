@@ -14,6 +14,7 @@ class Example(QWidget):
     def initUI(self):
         self.setGeometry(300, 300, 700, 500)
         self.setWindowTitle('Paint')
+        self.setWindowIcon(QIcon('data/icon.png'))
         self.setStyleSheet("background-color: #c8d9cb;")
         self.can_resize = False
         self.can_save = False
@@ -78,10 +79,11 @@ class Example(QWidget):
         pen.triggered.connect(self.click_act1)
         eraser = self.toolbar.addAction(QIcon('data/eraser.ico'), 'Eraser')
         eraser.triggered.connect(self.click_act2)
-        self.toolbar.addAction(QIcon('data/fill.ico'), 'Fill')
+        fill = self.toolbar.addAction(QIcon('data/fill.ico'), 'Fill')
+        fill.triggered.connect(self.click_act4)
         text = self.toolbar.addAction(QIcon('data/text.ico'), 'Text')
         text.triggered.connect(self.click_act3)
-        self.toolbar.addSeparator()
+        #self.toolbar.addSeparator()
 
         self.lbl = QLabel()
         self.lbl.setFixedSize(30, 30)
@@ -92,6 +94,17 @@ class Example(QWidget):
         a.triggered.connect(self.click1)
 
         self.toolbar.setStyleSheet("background-color: white;")
+
+    def get_cardinal_points(self, have_seen, center_pos):
+        points = []
+        cx, cy = center_pos
+        for self.xn, self.yn in [(1, 0), (0, 1), (-1, 0), (0, -1)]:
+            xx, yy = cx + self.xn, cy + self.yn
+            if (660 > xx > 40 and 480 > yy > 90 and (xx, yy) not in have_seen):
+                print(self.image.pixelColor(xx, yy).name())
+                points.append((xx, yy))
+                have_seen.add((xx, yy))
+        return points
 
     def keyPressEvent(self, event):
         if self.printt and event.key() != Qt.Key_Shift:
@@ -113,6 +126,21 @@ class Example(QWidget):
             self.xn = event.x()
             self.yn = event.y() - 5
             self.printt = True
+        elif self.act == 4:
+            self.w, self.h = self.image.width(), self.image.height()
+            self.xn = event.x()
+            self.yn = event.y()
+            painter = QPainter(self.image)
+            painter.setPen(QPen(self.brushColor))
+            have_seen = set()
+            queue = [(self.xn, self.yn)]
+            while queue:
+                x, y = queue.pop()
+                painter.drawPoint(QPoint(x, y))
+                queue.extend(self.get_cardinal_points(have_seen, (x, y)))
+
+            self.update()
+
         elif event.button() == Qt.LeftButton and 660 > event.x() > 40 and 480 > event.y() > 90:
             self.drawing = True
             self.lastPoint = event.pos()
@@ -148,6 +176,9 @@ class Example(QWidget):
 
     def click_act3(self):
         self.act = 3
+
+    def click_act4(self):
+        self.act = 4
 
     def paste(self):
         clipboard = QGuiApplication.clipboard()
